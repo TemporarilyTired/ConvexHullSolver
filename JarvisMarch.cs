@@ -7,11 +7,16 @@ using System.Threading.Tasks;
 
 namespace ConvexHullSolver;
 
-internal class JarvisMarch : ConvexHullAlgorithm
+internal class JarvisMarch : IConvexHullAlgorithm
 {
-    public override string AlgorithmName { get => "Jarvis March"; }
+    public string AlgorithmName { get => "Jarvis March"; }
 
-    public override List<(T x, T y)> CalculateConvexHull<T>(List<(T x, T y)> points)
+    public List<(T x, T y)> CalculateConvexHull<T>(List<(T x, T y)> points) where T :
+        IComparisonOperators<T, T, Boolean>,
+        IEqualityOperators<T, T, Boolean>,
+        IMultiplyOperators<T, T, T>,
+        ISubtractionOperators<T, T, T>,
+        IAdditiveIdentity<T, T>
     {
         List<(T, T)> convexHull = [];
 
@@ -48,7 +53,7 @@ internal class JarvisMarch : ConvexHullAlgorithm
                 // Check if a new point lies left of line (last hull point -> new hull point)
                 // also accept new if new hull point is equal to the last (when CH only has 1 point)
                 if (lastHullPoint == points[newHullPoint]
-                    || ConvexHullAlgorithm.Orient2DFast(lastHullPoint, points[newPoint], points[newHullPoint]) < T.AdditiveIdentity)
+                    || IConvexHullAlgorithm.Orient2DFast(lastHullPoint, points[newPoint], points[newHullPoint]) < T.AdditiveIdentity)
                 {
                     newHullPoint = newPoint;
                 }

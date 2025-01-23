@@ -2,7 +2,7 @@
 
 namespace ConvexHullSolver;
 
-internal abstract class ConvexHullAlgorithm
+internal interface IConvexHullAlgorithm
 {
     public abstract string AlgorithmName { get; }
 

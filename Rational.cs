@@ -8,11 +8,13 @@ internal readonly struct Rational :
     IEqualityOperators<Rational, Rational, Boolean>,
     IParsable<Rational>,
     IMultiplyOperators<Rational, Rational, Rational>,
+    IDivisionOperators<Rational, Rational, Rational>,
     ISubtractionOperators<Rational, Rational, Rational>,
+    IAdditionOperators<Rational, Rational, Rational>,
     IAdditiveIdentity<Rational, Rational>
 {
-    readonly BigInteger numerator;
-    readonly BigInteger denominator;
+    public readonly BigInteger numerator;
+    public readonly BigInteger denominator;
 
     public Rational(BigInteger numerator, BigInteger denominator)
     {
@@ -58,6 +60,15 @@ internal readonly struct Rational :
     public static Rational operator *(Rational left, Rational right)
     {
         return new Rational(left.numerator * right.numerator, left.denominator * right.denominator);
+    }
+
+    public static Rational operator /(Rational numerator, Rational denominator){
+        return new Rational(numerator.numerator * denominator.denominator, numerator.denominator * denominator.numerator);
+    }
+
+    public static Rational operator +(Rational left, Rational right){
+        (Rational equalizedLeft, Rational equalizedRight) = Rational.EqualizeDenominator(left, right);
+        return new Rational(equalizedLeft.numerator+equalizedRight.numerator, equalizedLeft.denominator);
     }
 
     public static Rational operator -(Rational left, Rational right)

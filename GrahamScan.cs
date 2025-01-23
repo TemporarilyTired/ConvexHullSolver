@@ -2,11 +2,16 @@
 
 namespace ConvexHullSolver;
 
-internal class GrahamScan : ConvexHullAlgorithm
+internal class GrahamScan : IConvexHullAlgorithm
 {
-    public override string AlgorithmName { get => "Graham Scan"; }
+    public string AlgorithmName { get => "Graham Scan"; }
 
-    public override List<(T x, T y)> CalculateConvexHull<T>(List<(T x, T y)> points)
+    public List<(T x, T y)> CalculateConvexHull<T>(List<(T x, T y)> points) where T :
+        IComparisonOperators<T, T, Boolean>,
+        IEqualityOperators<T, T, Boolean>,
+        IMultiplyOperators<T, T, T>,
+        ISubtractionOperators<T, T, T>,
+        IAdditiveIdentity<T, T>
     {
         if (points.Count < 3) return points;
 
@@ -25,7 +30,7 @@ internal class GrahamScan : ConvexHullAlgorithm
         return [.. lUpper, .. lLower];
     }
 
-    public static List<(T x, T y)> CalculateConvexHullSegment<T>(List<(T x, T y)> points) where T : IComparisonOperators<T, T, Boolean>, IEqualityOperators<T, T, Boolean>, IMultiplyOperators<T, T, T>, ISubtractionOperators<T, T, T>, IAdditiveIdentity<T, T>
+    private static List<(T x, T y)> CalculateConvexHullSegment<T>(List<(T x, T y)> points) where T : IComparisonOperators<T, T, Boolean>, IEqualityOperators<T, T, Boolean>, IMultiplyOperators<T, T, T>, ISubtractionOperators<T, T, T>, IAdditiveIdentity<T, T>
     {
         if (points.Count < 3) return points;
 
@@ -39,7 +44,7 @@ internal class GrahamScan : ConvexHullAlgorithm
         {
             hullSegment.Add(points[i]);
             while (hullSegment.Count > 2
-                && Orient2DFast(hullSegment[^3], hullSegment[^2], hullSegment[^1]) <= T.AdditiveIdentity)
+                && IConvexHullAlgorithm.Orient2DFast(hullSegment[^3], hullSegment[^2], hullSegment[^1]) <= T.AdditiveIdentity)
             {
                 hullSegment.RemoveAt(hullSegment.Count - 2);
             }
