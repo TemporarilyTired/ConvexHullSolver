@@ -4,17 +4,24 @@ using System;
 using System.IO;
 using System.Runtime.CompilerServices;
 
-string testLoc = "C:\\Users\\r\\Documents\\myd\\edu\\msc\\ga\\v2\\ConvexHullSolver\\input-files\\serious-tests\\";
-string sosLoc = "C:\\Users\\r\\Documents\\myd\\edu\\msc\\ga\\v2\\ConvexHullSolver\\sos-input-files\\";
+// string testLoc = "C:\\Users\\r\\Documents\\myd\\edu\\msc\\ga\\v2\\ConvexHullSolver\\input-files\\serious-tests\\";
+// string allLoc = "C:\\Users\\r\\Documents\\myd\\edu\\msc\\ga\\v2\\ConvexHullSolver\\";
+// string sosLoc = "C:\\Users\\r\\Documents\\myd\\edu\\msc\\ga\\v2\\ConvexHullSolver\\sos-input-files\\";
+// string sosLoc2 = "C:\\Users\\r\\Documents\\myd\\edu\\msc\\ga\\v2\\ConvexHullSolver\\sos-input-files\\illlllee\\";
+// string sosLoc3 = "C:\\Users\\r\\Documents\\myd\\edu\\msc\\ga\\v2\\ConvexHullSolver\\sos-input-files\\help\\";
+// string bigSuite = "C:\\Users\\r\\Documents\\myd\\edu\\msc\\ga\\v2\\ConvexHullSolver\\sos-input-files\\illlllee\\";
+// string bigSuite = "C:\\Users\\r\\Documents\\myd\\edu\\msc\\ga\\v2\\ConvexHullSolver\\input-files\\big-suite\\";
+string smallSuite = "C:\\Users\\r\\Documents\\myd\\edu\\msc\\ga\\v2\\ConvexHullSolver\\input-files\\small-suite\\";
 string resultLoc = "C:\\Users\\r\\Documents\\myd\\edu\\msc\\ga\\v2\\ConvexHullSolver\\output-files\\";
 bool createTests = false;
 
 if (createTests)
-    InputGenerator.GenerateTestCase<double>(sosLoc, 100, 1000, generateDisturbedCircleThing(new Random()));
-    //InputGenerator.GenerateAllTests(testLoc);
+    // InputGenerator.GenerateTestCase<double>(sosLoc2, 10, 100, generateDisturbedCircleThing(new Random()));
+    InputGenerator.GenerateAllTests(smallSuite, [100, 250, 500, 1000, 1500, 2000, 3000], 10);
+    // InputGenerator.GenerateAllTests(testLoc);
 else{
     var runner = new TestRunner(resultLoc);
-    runner.RunTests<Rational>(testLoc);
+    runner.RunTests<Rational>(smallSuite);
     Console.WriteLine("Program terminated"); // Console.ReadKey();
 }
 

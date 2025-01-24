@@ -5,15 +5,15 @@ using System.Text;
 using System.Threading.Tasks;
 using System.IO;
 using System.Numerics;
+using System.Diagnostics;
 
 namespace ConvexHullSolver;
 
 internal static class InputGenerator
 {
-    public static void GenerateAllTests(string testFolderPath, int numberTestsPerType=5, 
-    int geometricSeriesLength=2, int geometricSeriesStart=100, int geometricSeriesFactor=10)
+    public static void GenerateAllTests(string testFolderPath, int[] testSizes, int numberTestsPerType=5)
     {
-        const int BIGRANDOMINTCOUNTNUMERATOR = 3;
+        const int BIGRANDOMINTCOUNTNUMERATOR = 5;
         const int BIGRANDOMINTCOUNTDENOMINATOR = 3;
         int[] DISTURBFACTOR = [1, 1000];
         Random random = new();
@@ -22,8 +22,7 @@ internal static class InputGenerator
         FileInfo fi = new FileInfo(bigRandomTestPath);
         if (!fi.Directory.Exists) 
             System.IO.Directory.CreateDirectory(fi.DirectoryName); 
-        GenerateInputTypeCases(bigRandomTestPath, numberTestsPerType, geometricSeriesLength, 
-        geometricSeriesStart, geometricSeriesFactor, 
+        GenerateInputTypeCases(bigRandomTestPath, numberTestsPerType, testSizes,
         CreateRandomFunc(RandomFuncs.BigRandom, random, 
         BIGRANDOMINTCOUNTNUMERATOR, BIGRANDOMINTCOUNTDENOMINATOR));
 
@@ -32,8 +31,7 @@ internal static class InputGenerator
         fi = new FileInfo(unitRandomTestPath);
         if (!fi.Directory.Exists) 
             System.IO.Directory.CreateDirectory(fi.DirectoryName); 
-        GenerateInputTypeCases(unitRandomTestPath, numberTestsPerType, geometricSeriesLength, 
-        geometricSeriesStart, geometricSeriesFactor, 
+        GenerateInputTypeCases(unitRandomTestPath, numberTestsPerType, testSizes, 
         CreateRandomFunc(RandomFuncs.UnitRandom, random));
 
         //On circle random tests
@@ -41,30 +39,27 @@ internal static class InputGenerator
         fi = new FileInfo(circleRandomTestPath);
         if (!fi.Directory.Exists) 
             System.IO.Directory.CreateDirectory(fi.DirectoryName); 
-        GenerateInputTypeCases(circleRandomTestPath, numberTestsPerType, geometricSeriesLength, 
-        geometricSeriesStart, geometricSeriesFactor, 
+        GenerateInputTypeCases(circleRandomTestPath, numberTestsPerType, testSizes, 
         CreateRandomFunc(RandomFuncs.OnCircle, random));
 
         //Slightly off circle random tests
-        string offCircleRandomTestPath = Path.Join(testFolderPath, "DisturbedRandom\\");
+        string offCircleRandomTestPath = Path.Join(testFolderPath, "DisturbedCircle\\");
         fi = new FileInfo(offCircleRandomTestPath);
         if (!fi.Directory.Exists) 
             System.IO.Directory.CreateDirectory(fi.DirectoryName); 
-        GenerateInputTypeCases(offCircleRandomTestPath, numberTestsPerType, geometricSeriesLength, 
-        geometricSeriesStart, geometricSeriesFactor, 
+        GenerateInputTypeCases(offCircleRandomTestPath, numberTestsPerType, testSizes, 
         CreateRandomFunc(RandomFuncs.DisturbedCircle, random, DISTURBFACTOR));
     }
 
     private static void GenerateInputTypeCases(string folderPath, int numberTests, 
-        int geometricSeriesLength, int geometricSeriesValue , int geometricSeriesFactor, Func<(Rational, Rational)> coordinateGenerator)
+        int[] testSizes, Func<(Rational, Rational)> coordinateGenerator)
     {
-        for(int i = 0; i<geometricSeriesLength; i++){
-            string geoSeriesTestPath = Path.Join(folderPath,  $"n-{geometricSeriesValue}\\");
+        for(int i = 0; i<testSizes.Length; i++){
+            string geoSeriesTestPath = Path.Join(folderPath,  $"n-{testSizes[i]}\\");
             FileInfo fi = new FileInfo(geoSeriesTestPath);
             if (!fi.Directory.Exists) 
                 System.IO.Directory.CreateDirectory(fi.DirectoryName); 
-            GenerateTestCase<Rational>(geoSeriesTestPath, numberTests, geometricSeriesValue, coordinateGenerator);
-            geometricSeriesValue*=geometricSeriesFactor;
+            GenerateTestCase<Rational>(geoSeriesTestPath, numberTests, testSizes[i], coordinateGenerator);
         }
     }
 
@@ -99,7 +94,7 @@ internal static class InputGenerator
         BigRandom, //Args expected: (#ints to multiply to create nominator), (#ints to multiply to create denominator)
         UnitRandom, // Args expected: -
         OnCircle, // Args expected: -
-        DisturbedCircle, // Args expected: (#Halley iterations), (Scale factor numerator), (Scale factor denominator) 
+        DisturbedCircle, // Args expected: (Scale factor numerator), (Scale factor denominator) 
     }
 
     public static Func<(Rational, Rational)> CreateRandomFunc(RandomFuncs desiredFunc, Random random, params int[] args){
@@ -181,7 +176,6 @@ internal static class InputGenerator
             Rational x = Rational.ReduceFraction(new(xBInt, scaleFactorBInt));
             Rational y = Rational.ReduceFraction(new(yBInt, scaleFactorBInt));
 
-            Rational magTest = (x*x + y*y) -one;
             // (Rational x, Rational y) = UnitRandomGenerator(); 
             // //Unit random generates points in [0,1[, but we need [-1, 1[
             // x = (two*x-one)/two;
@@ -199,7 +193,10 @@ internal static class InputGenerator
             // Console.Write(" ");
             // Console.WriteLine(BigInteger.Log10(BigInteger.Abs(magTest.denominator)));
 
-            double difference = BigInteger.Log10(BigInteger.Abs(magTest.numerator)) - BigInteger.Log10(BigInteger.Abs(magTest.denominator));
+            // Rational magTest = (x*x + y*y) -one;
+            // double difference = BigInteger.Log10(BigInteger.Abs(magTest.numerator)) - BigInteger.Log10(BigInteger.Abs(magTest.denominator));
+            // Debug.WriteLine($"Difference from unit cirle: {Math.Pow(10, difference)}");
+
             return (x,y);
         }
         return RationalPairGenerator;
@@ -211,7 +208,18 @@ internal static class InputGenerator
         (Rational, Rational) Funky(){
             (Rational x, Rational y) = CircleGenerator();
             (Rational deltaX, Rational deltaY) = CircleGenerator();
-            return (x+deltaX*scaleFactor, y+deltaY*scaleFactor);
+            var resX = x+deltaX*scaleFactor;
+            var resY = y+deltaY*scaleFactor;
+
+            Debug.Assert(new Rational(-1002, 1000) < resX && resX < new Rational(1002, 1000));
+            Debug.Assert(new Rational(-1002, 1000) < resY && resY < new Rational(1002, 1000));
+            Rational magTest = (resX*resX + resY*resY) - (new Rational(1, 1));
+            double difference = BigInteger.Log10(BigInteger.Abs(magTest.numerator)) - BigInteger.Log10(BigInteger.Abs(magTest.denominator));
+            double distance = Math.Pow(10, difference);
+            // Debug.WriteLine($"Difference from unit cirle: {distance}");
+            Debug.Assert(distance < 0.002002);
+
+            return (resX, resY);
         }
         return Funky;
     }

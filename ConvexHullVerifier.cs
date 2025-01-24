@@ -29,8 +29,8 @@ internal static class ConvexHullVerifier
         {
             if (!VerifyAllRightOfSegment(points, convexHull[i], convexHull[(i + 1) % convexHull.Count]))
             {
-                // Console.WriteLine("Some segment in convex hull has some other point to its counterclockwise side");
-                // return false;
+                Console.WriteLine("Some segment in convex hull has some other point to its counterclockwise side");
+                return false;
             }
         }
         return true;

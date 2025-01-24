@@ -1,11 +1,16 @@
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
 using System.Numerics;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using Microsoft.VisualBasic;
 
 namespace ConvexHullSolver;
 
 class TestRunner(string resultPath)
 {
+    private static AutoResetEvent testStart = new AutoResetEvent(false);
+ 
     readonly string resultPath = resultPath;
     const string separator = ", ";
     IConvexHullAlgorithm jm = new JarvisMarch();
@@ -24,7 +29,10 @@ class TestRunner(string resultPath)
             foreach (string directory in Directory.GetDirectories(folderPath))
                 tests.AddRange(CrawlDir<T>(directory));
         else
+        {
             tests.AddRange(RunOnDir<T>(folderPath));
+            Console.WriteLine($"[{DateTime.Now.TimeOfDay}]: Running on {folderPath}");
+        }
         return tests;
     }
 
@@ -39,9 +47,8 @@ class TestRunner(string resultPath)
         {
             // write header
             string[] header_names = [
-                "fp1",
-                "fp2",
-                "fp3",
+                "Distribution",
+                "Test Case",
                 "#Points",
                 "#Points on CH",
                 jm.AlgorithmName + " runtime (ms)",
@@ -79,11 +86,12 @@ class TestRunner(string resultPath)
                 TimeConvexHull(jm, points, out int nPointsOnCH1),
                 TimeConvexHull(gs, pointsCopy, out int nPointsOnCH2)
             ];
-            int nPointsOnCH = nPointsOnCH1 * 1000 + nPointsOnCH2;//Math.Max(nPointsOnCH1, nPointsOnCH2); 
+            // Debug.Assert(nPointsOnCH1 == nPointsOnCH2);
+            int nPointsOnCH = Math.Max(nPointsOnCH1, nPointsOnCH2);
 
             List<string> fileParts = ["NO DIR", "NO DIR", "NO DIR"];
             fileParts.AddRange(folderPath.Split(['/', '\\'], StringSplitOptions.RemoveEmptyEntries));
-            TestCase testCase = new(fileParts[^2], fileParts[^1], $"test {i}", nPoints, nPointsOnCH, runs);
+            TestCase testCase = new(fileParts[^2], $"test {i}", nPoints, nPointsOnCH, runs);
             tests.Add(testCase);
         }
         return tests;
@@ -92,12 +100,29 @@ class TestRunner(string resultPath)
     {
         // Read input file
         List<(T, T)> pointsCopy = new(points);
+        List<(T,T)> convexHull = [];
+        CancelToken cancelToken = new();
+        testStart.Reset();
+        void RunCH (){
 
+            convexHull = convexHullAlgorithm.CalculateConvexHull(points, cancelToken);
+            testStart.Set();       
+        }
+
+        Thread t = new(RunCH);
         // Start stopwatch
-        var watch = System.Diagnostics.Stopwatch.StartNew();
+        var watch = Stopwatch.StartNew();
        
         // Calculate CH
-        List<(T, T)> convexHull = convexHullAlgorithm.CalculateConvexHull<T>(points);
+        t.Start();
+        if(!testStart.WaitOne(10000)){
+            //Test takes too long
+            cancelToken.Stop = true;
+            t.Join();
+            TestRun failedRes = new(convexHullAlgorithm.AlgorithmName, null, null);
+            nPointsOnHull = -1;
+            return failedRes;
+        }
 
         // Stop watch
         watch.Stop();
@@ -105,55 +130,65 @@ class TestRunner(string resultPath)
 
         // Verify Results
         bool validity = ConvexHullVerifier.Verify(pointsCopy, convexHull);
-        if(!validity){
-            Console.WriteLine("INVALID CH: idk what to do now"); //TODO: do stuff
-            // throw new InvalidProgramException("Program did not find the convex hull correctly");
-        }
 
         // Report results
-        Console.WriteLine("{1} took {0} ms", elapsedMS, convexHullAlgorithm.AlgorithmName);
+        /* Console.WriteLine("{0} took {1} ms{2}",
+                          convexHullAlgorithm.AlgorithmName,
+                          elapsedMS,
+                          validity ? "" : " but was INCORRECT!"); */
 
         nPointsOnHull = convexHull.Count;
         TestRun res = new(convexHullAlgorithm.AlgorithmName, elapsedMS, validity);
         return res;
-    }   
+    }
 }
 
-readonly struct TestCase(string _filePathPart1, string _filePathPart2, string _filePathPart3, int _nPoints, int _nPointsOnCH, TestRun[] _testRuns)
+readonly struct TestCase(string _filePathPart1, string _filePathPart2, int _nPoints, int _nPointsOnCH, TestRun[] _testRuns)
 {
     public readonly string filePathPart1 = _filePathPart1;
     public readonly string filePathPart2 = _filePathPart2;
-    public readonly string filePathPart3 = _filePathPart3;
     public readonly int nPoints = _nPoints;
     public readonly int nPointsOnCH = _nPointsOnCH;
 
     // more properties of the test
     public readonly TestRun[] testRuns = _testRuns;
-    public string ToCSVLine2(string separator, TestCase obj){
-        return string.Join(separator, typeof(TestCase).GetProperties().Select(prop => prop.GetValue(obj).ToString()));
-    }
+    
+    // public string ToCSVLine2(string separator, TestCase obj){
+    //     return string.Join(separator, typeof(TestCase).GetProperties().Select(prop => prop.GetValue(obj).ToString()));
+    // }
 
     public string ToCSVLine(string separator)
     {
         List<string> elems = [
             filePathPart1.ToString(),
             filePathPart2.ToString(),
-            filePathPart3.ToString(),
             nPoints.ToString(),
             nPointsOnCH.ToString()
         ];
         foreach(TestRun t in testRuns)
         {
-            elems.Add(t.elapsedMS.ToString());
-            elems.Add(t.correct.ToString());
+            if (t.elapsedMS is long time)
+                elems.Add(time.ToString());
+            else
+                elems.Add("DNF");
+
+            if (t.correct is bool correctV)
+                elems.Add(correctV.ToString());
+            else
+                elems.Add("DNF");
         }
         return string.Join(separator, elems);
     }
 }
 
-public readonly struct TestRun(string _alg_name, long _elapsedMS, bool _correct)
+public readonly struct TestRun(string _alg_name, long? _elapsedMS, bool? _correct)
 {
     public readonly string algorithm_name = _alg_name;
-    public readonly long elapsedMS = _elapsedMS;
-    public readonly bool correct = _correct;
+    public readonly long? elapsedMS = _elapsedMS;
+    public readonly bool? correct = _correct;
+}
+
+public class CancelToken
+{
+    public bool Stop = false;
 }

@@ -1,0 +1,21 @@
+fp1, fp2, fp3, #Points, #Points on CH, Jarvis March runtime (ms), Jarvis March validity, Graham Scan runtime (ms), Graham Scan validity
+ConvexHullSolver, sos-input-files, test 1, 1000, 1001000, 1829, True, 16, True
+ConvexHullSolver, sos-input-files, test 2, 1000, 1001000, 1646, True, 11, True
+ConvexHullSolver, sos-input-files, test 3, 1000, 1001000, 1689, True, 11, True
+ConvexHullSolver, sos-input-files, test 4, 1000, 1001000, 1694, True, 12, True
+ConvexHullSolver, sos-input-files, test 5, 1000, 1001000, 1682, True, 11, True
+ConvexHullSolver, sos-input-files, test 6, 1000, 1001000, 1638, True, 11, True
+ConvexHullSolver, sos-input-files, test 7, 1000, 1001000, 1620, True, 11, True
+ConvexHullSolver, sos-input-files, test 8, 1000, 1001000, 1656, True, 11, True
+ConvexHullSolver, sos-input-files, test 9, 1000, 1001000, 1717, True, 11, True
+ConvexHullSolver, sos-input-files, test 10, 1000, 1001000, 1633, True, 11, True
+ConvexHullSolver, sos-input-files, test 11, 1000, 1001000, 1659, True, 11, True
+ConvexHullSolver, sos-input-files, test 12, 1000, 1001000, 1621, True, 11, True
+ConvexHullSolver, sos-input-files, test 13, 1000, 1001000, 1610, True, 11, True
+ConvexHullSolver, sos-input-files, test 14, 1000, 1001000, 1626, True, 11, True
+ConvexHullSolver, sos-input-files, test 15, 1000, 1001000, 1610, True, 11, True
+ConvexHullSolver, sos-input-files, test 16, 1000, 1001000, 1609, True, 11, True
+ConvexHullSolver, sos-input-files, test 17, 1000, 1001000, 1636, True, 11, True
+ConvexHullSolver, sos-input-files, test 18, 1000, 1001000, 1672, True, 11, True
+ConvexHullSolver, sos-input-files, test 19, 1000, 1001000, 1609, True, 11, True
+ConvexHullSolver, sos-input-files, test 20, 1000, 1001000, 1607, True, 11, True

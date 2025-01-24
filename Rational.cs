@@ -17,10 +17,18 @@ internal readonly struct Rational :
     public readonly BigInteger numerator;
     public readonly BigInteger denominator;
 
-    public Rational(BigInteger numerator, BigInteger denominator)
+    public Rational(BigInteger num, BigInteger denom)
     {
-        this.numerator = numerator;
-        this.denominator = denominator;
+        if(denom == 0)
+            throw new DivideByZeroException("Denominator cannot be zero");
+
+        if (denom < 0)
+        {
+            num = -num;
+            denom = -denom;
+        }
+        numerator = num;
+        denominator = denom;
     }
 
     public static Rational AdditiveIdentity
@@ -40,7 +48,7 @@ internal readonly struct Rational :
         if (division.Length > 1)
         {
             if (division.Length == 2 && division[0].Length > 0 && division[1].Length > 0)
-                return new Rational(BigInteger.Parse(division[0], provider), BigInteger.Parse(division[1], provider));
+                return ReduceFraction(new Rational(BigInteger.Parse(division[0], provider), BigInteger.Parse(division[1], provider)));
             throw new ArgumentException("/ is used, but input cannot be parsed");
         }
         string[] ESeparated = rational.Split("E");
@@ -51,11 +59,11 @@ internal readonly struct Rational :
         if (decimalSeparated.Length > 1)
         {
             if (decimalSeparated.Length == 2 && decimalSeparated[0].Length > 0 && decimalSeparated[1].Length > 0)
-                return new Rational(BigInteger.Parse(string.Join("", decimalSeparated), provider) * (exponent > 0 ? tenPow : 1)
-                , (exponent < 0 ? tenPow : 1) * BigInteger.Pow(10, decimalSeparated[1].Length));
+                return ReduceFraction(new Rational(BigInteger.Parse(string.Join("", decimalSeparated), provider) * (exponent > 0 ? tenPow : 1)
+                , (exponent < 0 ? tenPow : 1) * BigInteger.Pow(10, decimalSeparated[1].Length)));
             throw new ArgumentException(". is used as separator, but input cannot be parsed");
         }
-        return new Rational(BigInteger.Parse(rational, provider), 1);
+        return ReduceFraction(new Rational(BigInteger.Parse(rational, provider), 1));
     }
 
     public static bool TryParse(string? rational, IFormatProvider? provider, out Rational result)
