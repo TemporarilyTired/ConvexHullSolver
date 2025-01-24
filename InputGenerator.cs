@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.IO;
-using System.Numerics;
-using System.Diagnostics;
+﻿using System.Numerics;
 
 namespace ConvexHullSolver;
 
@@ -13,19 +6,17 @@ internal static class InputGenerator
 {
     public static void GenerateAllTests(string testFolderPath, int[] testSizes, int numberTestsPerType=5)
     {
-        const int BIGRANDOMINTCOUNTNUMERATOR = 5;
-        const int BIGRANDOMINTCOUNTDENOMINATOR = 3;
         int[] DISTURBFACTOR = [1, 1000];
         Random random = new();
+
         //Big random number tests
-        string bigRandomTestPath = Path.Join(testFolderPath, "BigRandom\\");
+        string bigRandomTestPath = Path.Join(testFolderPath, "ConstantHull\\");
         FileInfo fi = new FileInfo(bigRandomTestPath);
         if (!fi.Directory.Exists) 
             System.IO.Directory.CreateDirectory(fi.DirectoryName); 
         GenerateInputTypeCases(bigRandomTestPath, numberTestsPerType, testSizes,
-        CreateRandomFunc(RandomFuncs.BigRandom, random, 
-        BIGRANDOMINTCOUNTNUMERATOR, BIGRANDOMINTCOUNTDENOMINATOR));
-
+        CreateRandomFunc(RandomFuncs.UnitRandom, random));
+        
         //Unit random tests
         string unitRandomTestPath = Path.Join(testFolderPath, "UnitRandom\\");
         fi = new FileInfo(unitRandomTestPath);
@@ -77,7 +68,11 @@ internal static class InputGenerator
                 
             using(StreamWriter sw = new(newFilePath)){
                 sw.WriteLine(pointsPerTest);
-                for (int j = 0; j < pointsPerTest; j++)
+                sw.WriteLine("0 0");
+                sw.WriteLine("1 1");
+                sw.WriteLine("0 1");
+                sw.WriteLine("1 0");
+                for (int j = 0; j < pointsPerTest-4; j++)
                 {
                     (T x, T y) = coordinateGenerator();
                     //To prevent the entire string from having to exist in memory we can write the coordinates separately
@@ -145,20 +140,6 @@ internal static class InputGenerator
 
     public static Func<(Rational, Rational)> CircleRandom(Random random, int[] args){
         Rational one = new(1,1);
-        // Rational two = new(2,1);
-        // Rational three = new(3,1);
-        // Rational half = new(1,2);
-        // var UnitRandomGenerator = CreateRandomFunc(RandomFuncs.UnitRandom, random);
-        // int halleyIterations = args[0];
-        // //https://en.wikipedia.org/wiki/Fast_inverse_square_root#Zero_finding
-        // Rational HalleyInverseSquareRoot(Rational start, Rational currentGuess){
-        //     var temp = start * currentGuess * currentGuess;
-        //     return Rational.ReduceFraction(currentGuess*((three+temp)/(one+three*temp)));
-        // }
-
-        // Rational HeronSquareRoot(Rational start, Rational currentGuess){
-        //     return Rational.ReduceFraction(half*(currentGuess + start/currentGuess));
-        // }
 
         const int precision = 19; //double precision limited
         double scaleFactorD = Math.Pow(10, precision);
@@ -176,27 +157,6 @@ internal static class InputGenerator
             Rational x = Rational.ReduceFraction(new(xBInt, scaleFactorBInt));
             Rational y = Rational.ReduceFraction(new(yBInt, scaleFactorBInt));
 
-            // (Rational x, Rational y) = UnitRandomGenerator(); 
-            // //Unit random generates points in [0,1[, but we need [-1, 1[
-            // x = (two*x-one)/two;
-            // y = (two*y-one)/two;
-            // Rational lengthVectorSquared = x*x + y*y;
-            // Rational squareRoot = lengthVectorSquared;
-            // // for(int i = 0; i < halleyIterations; i++) 
-            // //     inverseRoot = HalleyInverseSquareRoot(lengthVectorSquared, inverseRoot);
-            // for (int i=0; i< halleyIterations; i++)
-            //     squareRoot = HeronSquareRoot(lengthVectorSquared, squareRoot);
-            // //inverseRoot = one/inverseRoot;
-            // x /= squareRoot;
-            // y /= squareRoot;
-            // Console.Write(BigInteger.Log10(BigInteger.Abs(magTest.numerator)));
-            // Console.Write(" ");
-            // Console.WriteLine(BigInteger.Log10(BigInteger.Abs(magTest.denominator)));
-
-            // Rational magTest = (x*x + y*y) -one;
-            // double difference = BigInteger.Log10(BigInteger.Abs(magTest.numerator)) - BigInteger.Log10(BigInteger.Abs(magTest.denominator));
-            // Debug.WriteLine($"Difference from unit cirle: {Math.Pow(10, difference)}");
-
             return (x,y);
         }
         return RationalPairGenerator;
@@ -210,14 +170,6 @@ internal static class InputGenerator
             (Rational deltaX, Rational deltaY) = CircleGenerator();
             var resX = x+deltaX*scaleFactor;
             var resY = y+deltaY*scaleFactor;
-
-            Debug.Assert(new Rational(-1002, 1000) < resX && resX < new Rational(1002, 1000));
-            Debug.Assert(new Rational(-1002, 1000) < resY && resY < new Rational(1002, 1000));
-            Rational magTest = (resX*resX + resY*resY) - (new Rational(1, 1));
-            double difference = BigInteger.Log10(BigInteger.Abs(magTest.numerator)) - BigInteger.Log10(BigInteger.Abs(magTest.denominator));
-            double distance = Math.Pow(10, difference);
-            // Debug.WriteLine($"Difference from unit cirle: {distance}");
-            Debug.Assert(distance < 0.002002);
 
             return (resX, resY);
         }

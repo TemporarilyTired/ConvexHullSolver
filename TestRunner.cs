@@ -1,9 +1,5 @@
-using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
 using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Threading;
-using Microsoft.VisualBasic;
 
 namespace ConvexHullSolver;
 

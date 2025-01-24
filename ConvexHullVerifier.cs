@@ -1,7 +1,4 @@
 using System.Numerics;
-using System.Runtime.InteropServices;
-using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 
 namespace ConvexHullSolver;
 

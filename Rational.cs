@@ -154,7 +154,6 @@ internal readonly struct Rational :
     //     throw new ArgumentException("Objects cannot be compared");
     // }
     //We do not reduce this, as this takes up more performance than we gain in our use case 
-    //TODO: verify above statement
     public static (Rational, Rational) EqualizeDenominator(Rational r1, Rational r2)
     {
         Rational newr1 = new(r1.numerator * r2.denominator, r1.denominator * r2.denominator);
