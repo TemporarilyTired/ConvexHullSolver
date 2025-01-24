@@ -9,14 +9,14 @@ internal static class InputGenerator
         int[] DISTURBFACTOR = [1, 1000];
         Random random = new();
 
-        //Big random number tests
-        string bigRandomTestPath = Path.Join(testFolderPath, "ConstantHull\\");
-        FileInfo fi = new FileInfo(bigRandomTestPath);
+        //Constant number of hull points tests
+        string constantHullTestPath = Path.Join(testFolderPath, "ConstantHull\\");
+        FileInfo fi = new FileInfo(constantHullTestPath);
         if (!fi.Directory.Exists) 
             System.IO.Directory.CreateDirectory(fi.DirectoryName); 
-        GenerateInputTypeCases(bigRandomTestPath, numberTestsPerType, testSizes,
-        CreateRandomFunc(RandomFuncs.UnitRandom, random));
-        
+        GenerateInputTypeCases(constantHullTestPath, numberTestsPerType, testSizes,
+        CreateRandomFunc(RandomFuncs.SquareRandom, random, [numberTestsPerType, ..testSizes]));
+ 
         //Unit random tests
         string unitRandomTestPath = Path.Join(testFolderPath, "UnitRandom\\");
         fi = new FileInfo(unitRandomTestPath);
@@ -46,11 +46,11 @@ internal static class InputGenerator
         int[] testSizes, Func<(Rational, Rational)> coordinateGenerator)
     {
         for(int i = 0; i<testSizes.Length; i++){
-            string geoSeriesTestPath = Path.Join(folderPath,  $"n-{testSizes[i]}\\");
-            FileInfo fi = new FileInfo(geoSeriesTestPath);
+            string sizesTestPath = Path.Join(folderPath,  $"n-{testSizes[i]}\\");
+            FileInfo fi = new FileInfo(sizesTestPath);
             if (!fi.Directory.Exists) 
                 System.IO.Directory.CreateDirectory(fi.DirectoryName); 
-            GenerateTestCase<Rational>(geoSeriesTestPath, numberTests, testSizes[i], coordinateGenerator);
+            GenerateTestCase<Rational>(sizesTestPath, numberTests, testSizes[i], coordinateGenerator);
         }
     }
 
@@ -68,11 +68,7 @@ internal static class InputGenerator
                 
             using(StreamWriter sw = new(newFilePath)){
                 sw.WriteLine(pointsPerTest);
-                sw.WriteLine("0 0");
-                sw.WriteLine("1 1");
-                sw.WriteLine("0 1");
-                sw.WriteLine("1 0");
-                for (int j = 0; j < pointsPerTest-4; j++)
+                for (int j = 0; j < pointsPerTest; j++)
                 {
                     (T x, T y) = coordinateGenerator();
                     //To prevent the entire string from having to exist in memory we can write the coordinates separately
@@ -90,6 +86,7 @@ internal static class InputGenerator
         UnitRandom, // Args expected: -
         OnCircle, // Args expected: -
         DisturbedCircle, // Args expected: (Scale factor numerator), (Scale factor denominator) 
+        SquareRandom // Args expected: -
     }
 
     public static Func<(Rational, Rational)> CreateRandomFunc(RandomFuncs desiredFunc, Random random, params int[] args){
@@ -102,6 +99,8 @@ internal static class InputGenerator
                 return CircleRandom(random, args);
             case RandomFuncs.DisturbedCircle:
                 return DisturbedCircleRandom(random, args);
+            case RandomFuncs.SquareRandom:
+                return SquareRandom(random, args);
             default:
                 throw new ArgumentException("Unsupported random number function selected");
         }
@@ -138,6 +137,32 @@ internal static class InputGenerator
         return RationalNumberGenerator;
     }
 
+    public static Func<(Rational, Rational)> SquareRandom(Random random, int[] args){
+        int i = -1;
+        int j = 1; // What size test case are we in? (from args)
+        int k = 0; // How many of this size have we generated?
+        int testPerSize = args[0];
+        (Rational, Rational)[] SquarePoints = 
+            [new(new(0,1),new(0,1)), new(new(0,1),new(1,1)), 
+             new(new(1,1),new(1,1)), new(new(1,1),new(0,1))];
+        var internalGenerator = CreateRandomFunc(RandomFuncs.UnitRandom, random); 
+
+        (Rational, Rational) SquareNumberGenerator(){
+            i++;
+            if(i >= args[j]){
+                i=0;
+                k++;
+            }
+            if(k >= testPerSize){
+                j++;
+                k=0;
+            }
+            if(i<4)
+                return SquarePoints[i];
+            return internalGenerator();
+        }
+        return SquareNumberGenerator;
+    }
     public static Func<(Rational, Rational)> CircleRandom(Random random, int[] args){
         Rational one = new(1,1);
 
