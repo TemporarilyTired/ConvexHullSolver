@@ -11,18 +11,17 @@ internal class GrahamScan : IConvexHullAlgorithm
         IEqualityOperators<T, T, Boolean>,
         IMultiplyOperators<T, T, T>,
         ISubtractionOperators<T, T, T>,
-        IAdditiveIdentity<T, T>
+        IAdditiveIdentity<T, T>,
+        IComparable<T>
     {
         if (points.Count < 3) return points;
 
-        // Sort on X coordinate (then on Y hopefully)
+        // Sort on X coordinate, then on Y if X is equal
         points.Sort();
-
         List<(T x, T y)> lUpper = CalculateConvexHullSegment(points);
-
         points.Reverse();
         List<(T x, T y)> lLower = CalculateConvexHullSegment(points);
-        // Remove fist and last point from the lower hull because they are in
+        // Remove first and last point from the lower hull because they are in
         // the upper hull as well
         if (lLower.Count > 0) lLower.RemoveAt(0);
         if (lLower.Count > 0) lLower.RemoveAt(lLower.Count - 1);
@@ -36,15 +35,11 @@ internal class GrahamScan : IConvexHullAlgorithm
 
         List<(T x, T y)> hullSegment = [];
 
-
-        hullSegment.Add(points[0]);
-        hullSegment.Add(points[1]);
-
-        for (int i = 3; i < points.Count; i++)
-        {
+        for (int i = 0; i < points.Count; i++)
+        {                                                                                                       
             hullSegment.Add(points[i]);
             while (hullSegment.Count > 2
-                && IConvexHullAlgorithm.Orient2DFast(hullSegment[^3], hullSegment[^2], hullSegment[^1]) <= T.AdditiveIdentity)
+                && IConvexHullAlgorithm.Orient2DFast(hullSegment[^3], hullSegment[^2], hullSegment[^1]) >= T.AdditiveIdentity)
             {
                 hullSegment.RemoveAt(hullSegment.Count - 2);
             }

@@ -1,0 +1,6 @@
+fp1, fp2, fp3, #Points, #Points on CH, Jarvis March runtime (ms), Jarvis March validity, Graham Scan runtime (ms), Graham Scan validity
+ConvexHullSolver, sos-input-files, test 1, 100, 100, 29, True, 6, True
+ConvexHullSolver, sos-input-files, test 2, 100, 100, 28, True, 1, True
+ConvexHullSolver, sos-input-files, test 3, 100, 100, 32, True, 2, True
+ConvexHullSolver, sos-input-files, test 4, 100, 100, 19, True, 1, True
+ConvexHullSolver, sos-input-files, test 5, 100, 100, 15, True, 1, True

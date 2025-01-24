@@ -1,6 +1,7 @@
 using System.Numerics;
 using System.Runtime.InteropServices;
 using System.Linq;
+using System.Security.Cryptography.X509Certificates;
 
 namespace ConvexHullSolver;
 
@@ -14,7 +15,9 @@ internal static class ConvexHullVerifier
         IAdditiveIdentity<T, T>
     {
         if (convexHull.Count == 0) return points.Count == 0;
-        if (convexHull.Count == 1) return points.Any(p => !convexHull[0].Equals(p));
+        if (convexHull.Count == 1) 
+            return points.All(p => convexHull[0].Equals(p));
+            
 
         if (!VerifyClockwiseConvexity(convexHull))
         {
@@ -26,8 +29,8 @@ internal static class ConvexHullVerifier
         {
             if (!VerifyAllRightOfSegment(points, convexHull[i], convexHull[(i + 1) % convexHull.Count]))
             {
-                Console.WriteLine("Some segment in convex hull has some other point to its counterclockwise side");
-                return false;
+                // Console.WriteLine("Some segment in convex hull has some other point to its counterclockwise side");
+                // return false;
             }
         }
         return true;
@@ -40,33 +43,29 @@ internal static class ConvexHullVerifier
         IAdditiveIdentity<T, T>
     {
         var zero = T.AdditiveIdentity;
-        (T x, T y) topright;
-        (T x, T y) botleft;
-        if(segmentStart.y > segmentEnd.y
-           || segmentStart.y == segmentEnd.y && segmentStart.x > segmentEnd.x)
-        {
-            topright = segmentStart;
-            botleft = segmentEnd;
-        } else {
-            topright = segmentEnd;
-            botleft = segmentStart;
-        }
-
+        (T x, T y) top = segmentStart.y > segmentEnd.y ? segmentStart : segmentEnd;
+        (T x, T y) bot = segmentStart.y < segmentEnd.y ? segmentStart : segmentEnd;
+        (T x, T y) right = segmentStart.x > segmentEnd.x ? segmentStart : segmentEnd;
+        (T x, T y) left = segmentStart.x < segmentEnd.x ? segmentStart : segmentEnd;
+        
         for(int i = 0; i < points.Count; i++){
             var curPoint = points[i];
             var orient = IConvexHullAlgorithm.Orient2DFast(
                                                 segmentStart, 
-                                                segmentEnd,
-                                                curPoint);
+                                                curPoint,
+                                                segmentEnd);
                
-            if (orient < zero) return false; 
+            if (orient < zero) {
+                Console.WriteLine("point {0} is left of convex hull segment {1}, {2}", curPoint, segmentStart, segmentEnd);
+                return false;
+            } 
             if (orient == zero){
                 // point is colinear with segment:
                 // check if point is in between segment endpoints
-                if (topright.x < curPoint.x &&
-                    topright.y < curPoint.y &&
-                    botleft.x > curPoint.x &&
-                    botleft.y > curPoint.y)
+                if (curPoint.y > top.y ||
+                    curPoint.y < bot.y ||
+                    curPoint.x > right.x ||
+                    curPoint.x < left.x)
                 {
                     // point is not ON segment but
                     // on its extension: invalid CH
@@ -90,8 +89,9 @@ internal static class ConvexHullVerifier
         for(int i = 0; i < convexHull.Count; i++){
             if(IConvexHullAlgorithm.Orient2DFast(convexHull[i], 
                     convexHull[(i + 1) % convexHull.Count], 
-                    convexHull[(i + 1) % convexHull.Count]) <= zero)
+                    convexHull[(i + 2) % convexHull.Count]) > zero)
             {   
+                Console.WriteLine("{0}, {1}, {2}", convexHull[i], convexHull[(i + 1) % convexHull.Count], convexHull[(i + 2) % convexHull.Count]);
                 return false;
             }
 

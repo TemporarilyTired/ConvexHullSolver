@@ -2,15 +2,15 @@
 
 static internal class InputReader<T> where T : IParsable<T>
 {
-    private const string inputFilesDirectory = "..\\..\\..\\input-files\\";
-    public static List<(T x, T y)> ReadFile(string filename)
+
+    public static List<(T x, T y)> ReadFile(string filePath)
     {
         try
         {
             List<(T x, T y)> res;
 
             // Create an instance of StreamReader to read from a file.
-            using (StreamReader sr = new StreamReader(inputFilesDirectory + filename))
+            using (StreamReader sr = new StreamReader(filePath))
             {
                 if (sr is null)
                     throw new Exception("streamreader is null");
@@ -37,7 +37,7 @@ static internal class InputReader<T> where T : IParsable<T>
         {
             Console.WriteLine("The file could not be read: ");
             Console.WriteLine(e.Message);
-            return null;
+            throw e;
         }
     }
 }

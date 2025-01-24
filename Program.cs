@@ -2,50 +2,40 @@
 using System.Numerics;
 using System;
 using System.IO;
-IConvexHullAlgorithm jm = new JarvisMarch();
-IConvexHullAlgorithm gs = new GrahamScan();
+using System.Runtime.CompilerServices;
 
-// TestConvexHull<double>(jm, "000.txt");
-// TestConvexHull<double>(gs, "001.txt");
-var random = new Random();
+string testLoc = "C:\\Users\\r\\Documents\\myd\\edu\\msc\\ga\\v2\\ConvexHullSolver\\input-files\\serious-tests\\";
+string sosLoc = "C:\\Users\\r\\Documents\\myd\\edu\\msc\\ga\\v2\\ConvexHullSolver\\sos-input-files\\";
+string resultLoc = "C:\\Users\\r\\Documents\\myd\\edu\\msc\\ga\\v2\\ConvexHullSolver\\output-files\\";
+bool createTests = false;
 
-string testLoc = "..\\..\\..\\input-files\\test-test\\";
-InputGenerator.GenerateInput(testLoc, 10, 100, InputGenerator.CreateRandomFunc(InputGenerator.RandomFuncs.OnCircle, random, 1));
+if (createTests)
+    InputGenerator.GenerateTestCase<double>(sosLoc, 100, 1000, generateDisturbedCircleThing(new Random()));
+    //InputGenerator.GenerateAllTests(testLoc);
+else{
+    var runner = new TestRunner(resultLoc);
+    runner.RunTests<Rational>(testLoc);
+    Console.WriteLine("Program terminated"); // Console.ReadKey();
+}
 
-Console.WriteLine("Program terminated"); // Console.ReadKey();
-
-static void TestConvexHull<T>(IConvexHullAlgorithm convexHullAlgorithm, string file) where T : IParsable<T>, IComparisonOperators<T, T, Boolean>, IEqualityOperators<T, T, Boolean>, IMultiplyOperators<T, T, T>, ISubtractionOperators<T, T, T>, IAdditiveIdentity<T, T>
-{
-    // Read input file
-    List<(T, T)> points = InputReader<T>.ReadFile(file);
-    List<(T, T)> pointsCopy = new(points);
-
-    // for debug: print input
-    Console.WriteLine("Input: ");
-    foreach (var point in points)
-        Console.WriteLine(point.ToString());
-
-    // Start stopwatch
-    var watch = System.Diagnostics.Stopwatch.StartNew();
-   
-    // Calculate CH
-    List<(T, T)> convexHull = convexHullAlgorithm.CalculateConvexHull<T>(points);
-
-    // Stop watch
-    watch.Stop();
-    var elapsedMS = watch.ElapsedMilliseconds;
-
-    // Verify Results
-    bool validity = ConvexHullVerifier.Verify(pointsCopy, convexHull);
-    if(!validity){
-        Console.WriteLine("INVALID CH: idk what to do now"); //TODO: do stuff
+Func<(double, double)> generateCircleThing(Random random){
+    (double, double) meh(){
+        double angle = 2 * Math.PI * random.NextDouble();
+        double xD = Math.Cos(angle);
+        double yD = Math.Sin(angle);
+        return (xD, yD);
     }
-
-    // Report results
-    Console.WriteLine("Jarvis march took {0} ms", elapsedMS);
-    Console.WriteLine("Calculated convex hull:");
-    foreach (var point in convexHull)
-        Console.WriteLine(point.ToString());
-
-    // TODO: verify results maybe?
+    return meh;
+}
+Func<(double, double)> generateDisturbedCircleThing(Random random){
+    (double, double) meh(){
+        double angle = 2 * Math.PI * random.NextDouble();
+        double xD = Math.Cos(angle);
+        double yD = Math.Sin(angle);
+        double angle2 = 2 * Math.PI * random.NextDouble();
+        double xD2 = Math.Cos(angle);
+        double yD2 = Math.Sin(angle);
+        return (xD + xD2 / 1000.0d, yD + yD2 / 1000.0d);
+    }
+    return meh;
 }

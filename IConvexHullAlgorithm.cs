@@ -1,4 +1,5 @@
-﻿using System.Numerics;
+﻿using System.ComponentModel;
+using System.Numerics;
 
 namespace ConvexHullSolver;
 
@@ -11,10 +12,11 @@ internal interface IConvexHullAlgorithm
         IEqualityOperators<T, T, Boolean>,
         IMultiplyOperators<T, T, T>,
         ISubtractionOperators<T, T, T>,
-        IAdditiveIdentity<T, T>;
+        IAdditiveIdentity<T, T>,
+        IComparable<T>;
 
 
-    // Returns positive value if ABC occur in clockwise order (i.e., B is left of AC)
+    // Returns positive value if ABC occur in counterclockwise order (i.e., B is right of AC)
     public static T Orient2DFast<T>((T x, T y) A, (T x, T y) B, (T x, T y) C) where T : IComparisonOperators<T, T, Boolean>, IEqualityOperators<T, T, Boolean>, IMultiplyOperators<T, T, T>, ISubtractionOperators<T, T, T>, IAdditiveIdentity<T, T>
     {
         T ACx = A.x - C.x;
